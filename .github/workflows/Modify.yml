@@ -1,0 +1,42 @@
+name: 手动同步分支
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: 'Modify'
+        required: true
+        default: 'Original'
+        type: string
+      target_branch:
+        description: 'main'
+        required: true
+        default: 'Modify'
+        type: string
+
+jobs:
+  sync-branches:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整历史记录
+          
+      - name: 配置 Git
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          
+      - name: 同步分支
+        run: |
+          echo "从 ${{ inputs.source_branch }} 同步到 ${{ inputs.target_branch }}"
+          git fetch origin ${{ inputs.source_branch }}
+          git checkout ${{ inputs.target_branch }}
+          git merge origin/${{ inputs.source_branch }} --no-ff -m "Merge ${{ inputs.source_branch }} into ${{ inputs.target_branch }}"
+          git push origin ${{ inputs.target_branch }}
+          
+      - name: 完成提示
+        run: |
+          echo "✅ 成功将 ${{ inputs.source_branch }} 同步到 ${{ inputs.target_branch }}"
